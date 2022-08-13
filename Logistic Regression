@@ -1,0 +1,106 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+#We need to know relation between Survived and  all Features
+
+# PartI explore DATA
+train=pd.read_csv('titanic_train.csv')
+print(train.head(2).to_string())#to_string for explore all head #show only 2 row
+print(train.info()) #check Row, check columns features, check data type
+print(train.describe().to_string()) #check stats on all features
+print(train.columns)#check columns name
+print(train.isnull) #check NAN data
+
+#PartII data visualization
+#sns.heatmap(train.isnull(),yticklabels=False,cbar=False,cmap='viridis')
+#check NAN data by visualize
+sns.set_style('whitegrid') #set style for easy to check
+#sns.countplot(x='Survived',hue='Sex',data=train,palette='RdBu_r') #looklike men strong coeff
+#sns.countplot(x='Survived',hue='Pclass',data=train) #looklike class 3 strong coeff
+#sns.distplot(train['Age'].dropna(),kde=False,bins=30) #age around 20-30 ages
+#train['Age'].plot.hist(bins=35)
+#train['Fare'].hist(bins=40,figsize=(10,4))
+#plt.figure(figsize=(10,7)) #change size set before use sns.xx
+#sns.boxplot(x='Pclass',y='Age',data=train)
+plt.show()
+
+#III Clean
+def impute_age(cols): #fill in null age by average in average age
+    Age = cols[0]
+    Pclass=cols[1]
+    if pd.isnull(Age):
+        if Pclass==1:
+            return 37
+        elif Pclass==2:
+            return 29
+        else:
+            return 24
+    else:
+        return Age
+
+train ['Age']=train [['Age','Pclass']].apply(impute_age,axis=1)
+#check
+#sns.heatmap(train.isnull(),yticklabels=False,cbar=False,cmap='viridis')
+
+#next Cabin column
+train.drop('Cabin',axis=1,inplace=True)
+#check
+#sns.heatmap(train.isnull(),yticklabels=False,cbar=False,cmap='viridis')
+
+#just one column
+train.dropna(inplace=True)
+#sns.heatmap(train.isnull(),yticklabels=False,cbar=False,cmap='viridis')
+#OK no NA
+#plt.show()
+
+#change features to binary 0,1
+sex=pd.get_dummies(train['Sex'],drop_first=True)
+#add drop_first for cut off double coeff if not it show male and female in binary column
+embark=pd.get_dummies(train['Embarked'],drop_first=True)
+#same above
+train=pd.concat([train,sex,embark],axis=1)
+#add binary columns
+train.drop(['Sex','Embarked','Name','Ticket'],axis=1,inplace=True)
+print(train.head(2))
+train.drop('PassengerId',axis=1,inplace=True)
+print(train.head(2).to_string())
+train.to_csv('trainnew.csv')
+
+
+#IV logistic regression
+X=train.drop('Survived',axis=1)
+y=train['Survived'] #index try to predicted
+
+from sklearn.model_selection import train_test_split
+X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.3,random_state=101)
+
+from sklearn.linear_model import LogisticRegression
+logmodel=LogisticRegression()
+logmodel.fit(X_train,y_train)
+predictions=logmodel.predict(X_test)
+print(predictions)
+
+df_preds = pd.DataFrame({'Actual': y_test, 'Predicted': predictions})
+print(df_preds)
+df_preds.to_csv('Preds.csv')
+
+
+#Part IV Evaluation model
+from sklearn.metrics import classification_report
+print(classification_report(y_test,predictions))
+
+from sklearn.metrics import confusion_matrix
+print(confusion_matrix(y_test,predictions)) #check type I and II error
+
+
+print('Confusion Matrix')
+print('Confusion Matrix')
+
+#try to test another data set which already clean
+testset=pd.read_csv('testset.csv')
+testset = testset.drop(['Survived'],axis=1)
+#testset['prob'] = logmodel.predict_proba(testset)
+testset['classification'] = logmodel.predict(testset)
+testset.to_csv('t.csv')
