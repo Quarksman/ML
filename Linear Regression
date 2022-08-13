@@ -1,0 +1,69 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import r2_score
+
+#We need to know relation between Price and Location all Features
+
+# PartI explore DATA
+df=pd.read_csv('USA_Housing.csv')
+#check features
+print(df.head(2).to_string()) #to_string for explore all head #show only 2 row
+print(df.info()) #check Row, check columns features, check data type
+print(df.describe().to_string()) #check stats on all features
+print(df.columns)#check columns name
+#data visualization
+#sns.distplot(df['Price']) #Look normal and average 1-1.5 million
+print(df.corr().to_string()) #check correlation between each features
+sns.heatmap(df.corr(),annot=True).set(title='features correlation')
+#check by heat map #annot show data in heat map
+                                  #Income most strong relate with price
+variables = ['Avg. Area Income', 'Avg. Area House Age', 'Avg. Area Number of Rooms',
+       'Avg. Area Number of Bedrooms', 'Area Population']
+plt.show()
+
+for var in variables:
+    plt.figure()  # Creating a rectangle (figure) for each plot
+    # Regression Plot also by default includes
+    # best-fitting regression line
+    # which can be turned off via `fit_reg=False`
+    sns.regplot(x=var, y='Price', data=df).set(title=f'Regression plot of {var} and Price')
+plt.show()
+
+#Part III Find relation
+X=df[['Avg. Area Income', 'Avg. Area House Age', 'Avg. Area Number of Rooms',
+       'Avg. Area Number of Bedrooms', 'Area Population']] #Grab columns features
+y=df['Price'] #target data
+X_train,X_test,y_train,y_test = train_test_split(X, y, test_size=0.4, random_state=101)
+#Use Sk learn module train dataset
+lm=LinearRegression() #call linear regression model
+lm.fit(X_train,y_train) #fitting train model
+print(lm.intercept_) #find intercept equation
+print(lm.coef_) #find coefficient of each features, X_train
+Coeff=pd.DataFrame(lm.coef_,X.columns,columns=['Coeff']) #dataframe coeff with features
+print(Coeff)
+
+#Part IV Evaluation model
+y_pred=lm.predict(X_test)
+print(y_pred)
+print(mean_squared_error(y_test,y_pred))
+print(mean_squared_error(y_test, y_pred, squared = False))
+print(r2_score(y_test, y_pred)) #r2 score near 1 very good
+print(lm.score(X_test,y_test)) #r2 score near 1 very good
+print(lm.score(X_train,y_train))
+
+df_preds = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred})
+print(df_preds)
+df_preds.to_csv('Preds.csv')
+
+#try to make function to predict
+def price(Income,Age,Rooms,Bedrooms,Population):
+    return 21.528276*Income+164883.282027*Age+122368.678027*Rooms\
+           +2233.801864*Bedrooms+15.150420*Population-2640159.7968526958
+
+PricePredict=price(Income=79545,Age=5.68,Rooms=7,Bedrooms=4.09,Population=23086)
+print(PricePredict)
