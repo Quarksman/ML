@@ -1,0 +1,39 @@
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+tips=sns.load_dataset('tips')
+flights=sns.load_dataset('flights')
+iris=sns.load_dataset('iris')
+print(tips.head().to_string())
+print(flights.head().to_string())
+print(iris.head().to_string())
+
+#Distribution Plots
+#sns.distplot(tips['total_bill'],kde=False,bins=40) #kde=True include norm bin= no.bar
+#sns.jointplot(x='total_bill',y='tip',data=tips) #2 disp if no kind=scatter, 'reg','hex'
+#sns.pairplot(tips,hue='sex',palette='coolwarm') #plot each factor very quick look #hue highlight at that factor
+#sns.rugplot(tips['total_bill']) #dot plot
+#sns.kdeplot(tips['total_bill']) #just norm
+
+#Matrix Plots
+#before make heatmap
+#tc=tips.corr() #make correlation between each factors
+#sns.heatmap(tc,annot=True,cmap='coolwarm') #annot show data
+#fp=flights.pivot_table(index='month',columns='year',values='passengers') #pivot table
+#sns.heatmap(fp,cmap='coolwarm',linecolor='white',linewidth=3)
+
+#GRIDs
+#g=sns.FacetGrid(data=tips,col='time',row='smoker')
+#g.map(sns.displot,'total_bill') # good for separate factor
+#g.map(plt.scatter,'total_bill','tip')
+
+#Linear plot
+#sns.lmplot(x='total_bill',y='tip',data=tips,hue='sex',markers=['o','v']) #may separate sex by col='sex'
+#aspect=0.6,size=8 change size
+
+#Set syle to all
+#sns.set_style('whitegrid') #figsize=(12,3) change size inside
+#sns.set_context('poster',font_scale=3) #change graph visulize
+sns.countplot(x='sex',hue='smoker',data=tips)
+#sns.despine(left=True,bottom=True) #remove line
+plt.show()
