@@ -37,3 +37,11 @@ print(iris.head().to_string())
 sns.countplot(x='sex',hue='smoker',data=tips)
 #sns.despine(left=True,bottom=True) #remove line
 plt.show()
+
+tip=sns.load_dataset('tips')
+print(tip.head().to_string())
+
+ax=sns.countplot(data=tip,x='sex',hue='smoker')
+for container in ax.containers: #for ad value in top
+    ax.bar_label(container)
+plt.show()
