@@ -1,0 +1,79 @@
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix,classification_report
+from sklearn.model_selection import train_test_split
+import warnings
+from sklearn.neighbors import KNeighborsClassifier
+
+
+car=pd.read_csv('/Users/kritsana/Downloads/Datasets/Kaggle/car_data.csv')
+print(car.head(4).to_string())
+print(car.describe())
+print(car.columns)
+print(car.shape)
+print(car.isnull().sum())
+print(car.duplicated().sum())
+print(car.nunique())
+
+plt.style.use('fivethirtyeight')
+colors=['#9db1f8','#217a36','#47bc8f','#947efd','#a4d835']
+sns.set_palette(sns.color_palette(colors))
+
+warnings.filterwarnings('ignore')
+car.drop('User ID',axis=1,inplace=True)
+fig,ax=plt.subplots(2,3,figsize=(10,5))
+sns.distplot(car['Age'],ax=ax[0,0])
+sns.boxplot(y=car['Age'],ax=ax[0,1])
+sns.histplot(data=car,x='Age',ax=ax[0,2],hue='Purchased',kde=True)
+
+sns.distplot(car['AnnualSalary'],ax=ax[1,0])
+sns.boxplot(y=car['AnnualSalary'],ax=ax[1,1])
+sns.histplot(data=car,x='AnnualSalary',ax=ax[1,2],hue='Purchased',kde=True)
+
+fig.tight_layout()
+fig.subplots_adjust(top=0.95)
+plt.suptitle('Visualizing Continuous Columns',fontsize=10)
+plt.show()
+
+co=sns.countplot(data=car,x='Gender')
+for container in co.containers: #for ad value in top
+    co.bar_label(container)
+plt.show()
+
+plt.pie(car['Purchased'].value_counts(),labels=car['Purchased'].value_counts().index,
+        autopct='%.2f',explode=[0,0.1])
+plt.title('Class Imbalance')
+plt.show()
+
+fig,ax=plt.subplots(1,2,figsize=(10,5))
+sns.histplot(data=car,x='Age',ax=ax[0],hue='Gender',kde=True)
+sns.histplot(data=car,x='AnnualSalary',ax=ax[1],hue='Gender',kde=True)
+plt.show()
+
+sns.pairplot(car,hue='Purchased')
+plt.show()
+
+sns.heatmap(car.corr(),annot=True,cmap='coolwarm')
+plt.show()
+
+print(car.head(3).to_string())
+
+car['Gender'].replace(['Male','Female'],[0,1,],inplace=True)
+X=car.drop(['Purchased'],axis=1)
+y=car['Purchased']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=101)
+
+KN=KNeighborsClassifier()
+knn=KN.fit(X_train,y_train)
+Preds=KN.predict(X_test)
+
+print(classification_report(y_test,Preds))
+print(confusion_matrix(y_test,Preds))
+
+confusion_knn=confusion_matrix(y_test,knn.predict(X_test))
+plt.figure(figsize=(8,8))
+sns.heatmap(confusion_knn,annot=True,fmt='.4g')
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()
