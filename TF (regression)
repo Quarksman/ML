@@ -1,0 +1,89 @@
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import seaborn as sns
+
+df=pd.read_csv('/Users/kritsana/Downloads/Datasets/Learn/kc_house_data.csv')
+print(df.head(2).to_string())
+print(df.isnull().sum())
+print(df.duplicated().sum())
+print(df.nunique())
+print(df.describe().to_string())
+print(df.columns)
+print(df.shape)
+
+#plt.figure(figsize=(10,6))
+#sns.distplot(df['price'])
+#sns.countplot(df['bedrooms'])
+print(df.corr().to_string())
+print(df.corr()['price'].sort_values)
+
+#plt.figure(figsize=(10,6))
+#sns.scatterplot(x='price',y='sqft_living',data=df)
+#sns.boxplot(x='bedrooms',y='price',data=df)
+#plt.figure(figsize=(12,8))
+#sns.scatterplot(x='price',y='long',data=df)
+#sns.scatterplot(x='price',y='lat',data=df)
+#sns.scatterplot(x='long',y='lat',data=df,hue='price')
+print(df.sort_values('price',ascending=False).head(20).to_string())
+print(len(df)*0.01)
+non_top_1perc=df.sort_values('price',ascending=False).iloc[216:] #exclude 1%
+#plt.figure(figsize=(12,8))
+#sns.scatterplot(x='long',y='lat',data=non_top_1perc,edgecolor=None,hue='price',alpha=0.2,palette='RdYlGn')
+#sns.boxplot(x='waterfront',y='price',data=df)
+
+
+df=df.drop('id',axis=1)
+df['date']=pd.to_datetime(df['date'])
+print(df.head(4).to_string())
+df['year']=df['date'].apply(lambda date: date.year)
+df['month']=df['date'].apply(lambda date: date.month)
+#df.groupby('month').mean()['price'].plot()
+#df.groupby('year').mean()['price'].plot()
+df=df.drop('date',axis=1)
+
+print(df['zipcode'].value_counts())
+df=df.drop('zipcode',axis=1)
+print(df['yr_renovated'].value_counts()) #0 is no renovated looklike renovate make more price
+print(df['sqft_basement'].value_counts())
+
+X=df.drop('price',axis=1).values
+y=df['price'].values
+from sklearn.model_selection import  train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=101)
+from sklearn.preprocessing import MinMaxScaler
+scaler=MinMaxScaler()
+scaler.fit(X_train)
+X_train=scaler.transform(X_train)
+X_test=scaler.transform(X_test)
+from keras.models import Sequential
+from keras.layers import Dense
+print(X_train.shape) #19 features
+model=Sequential()
+model.add(Dense(19,activation='relu'))
+model.add(Dense(19,activation='relu'))
+model.add(Dense(19,activation='relu'))
+model.add(Dense(19,activation='relu'))
+model.add(Dense(1))
+model.compile(optimizer='adam',loss='mse')
+price=model.fit(x=X_train,y=y_train,validation_data=(X_test,y_test),epochs=250,batch_size=128)
+
+loss=pd.DataFrame(model.history.history)
+loss.plot() #not show over fitting and slope decrease slightly
+plt.show()
+
+from sklearn.metrics import mean_squared_error,mean_absolute_error,explained_variance_score
+predictions=model.predict(X_test)
+print(mean_absolute_error(y_test,predictions))
+print(mean_squared_error(y_test,predictions))
+print(explained_variance_score(y_test,predictions)) #best 1.0
+plt.figure(figsize=(12,6))
+plt.scatter(y_test,predictions)
+plt.plot(y_test,y_test,'r')
+plt.show()
+
+#predict price by use features
+single_house=df.drop('price',axis=1).iloc[0]
+single_house=scaler.transform(single_house.values.reshape(-1,19))
+model.predict(single_house)
+print(df.head(1)) #overshoot maybe drop extreme data
